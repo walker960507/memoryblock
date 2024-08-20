@@ -9,6 +9,8 @@
              parameter REFILL_NUM          = 1,\
              parameter SNPSLV_NUM          = 1,\
              parameter INSTRUCTION_WIDTH   = 32,\
+             parameter MEM_CACHE_ADDR_MIN  = 32'h80000000,\
+             parameter MEM_CACHE_ADDR_MAX  = 32'h8fffffff,\
              parameter PARAM_END = 0)
 
 `define REFILL_SLOT_PARAM #( \
@@ -23,6 +25,8 @@
              parameter REFILL_NUM          = 1,\
              parameter SNPSLV_NUM          = 1,\
              parameter INSTRUCTION_WIDTH   = 32,\
+             parameter MEM_CACHE_ADDR_MIN  = 32'h80000000,\
+             parameter MEM_CACHE_ADDR_MAX  = 32'h8fffffff,\
              parameter PARAM_END = 0)
 
  `define REFILL_SLOT_PARAM_INST  .L1D_BANK_SIZE(L1D_BANK_SIZE),\
@@ -35,4 +39,6 @@
                                  .REFILL_NUM(REFILL_NUM),\
                                  .SNPSLV_NUM(SNPSLV_NUM),\
                                  .INSTRUCTION_WIDTH(INSTRUCTION_WIDTH),\
+                                 .MEM_CACHE_ADDR_MIN(MEM_CACHE_ADDR_MIN),\
+                                 .MEM_CACHE_ADDR_MAX(MEM_CACHE_ADDR_MAX),\
                                  .PARAM_END(1)
