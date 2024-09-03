@@ -1,0 +1,65 @@
+
+//only support cacheable addr excl load
+//only support one outstanding lc/sc
+module lp_monitor	#(
+					 `CORE_PARAM
+					)
+(
+	input wire clk_i,
+	input wire rst_i,
+
+	// interface with lsu      
+	input wire write_i,
+	input wire check_i,
+	input wire [`PA_WIDTH-1:0] addr_i,
+	output wire detected_o,
+
+	// interface with l1 bus
+	// AC
+	input wire ac_valid_i,
+	input wire [`AC_OPCODE_WIDTH-1:0] ac_opcode_i,
+	input wire [`PA_WIDTH-1:0] ac_addr_i
+);
+genvar gi;
+integer i;
+reg [`PA_WIDTH-1:0] lp_addr_q;
+reg lp_valid_q;
+wire lp_valid_enable_w;
+wire lp_valid_nxt_w;
+wire snpinvalid_match_w;
+wire snp_invalid_w;
+wire write_snpinvalid_match_w;
+assign lp_valid_enable_w = write_i | check_i | snpinvalid_match_w;
+assign lp_valid_nxt_w = write_i & (~write_snpinvalid_match_w);
+always @(posedge clk_i or posedge rst_i)
+	if (rst_i) begin
+		lp_valid_q <= 'b0;
+	end else begin
+		if (lp_valid_enable_w)
+			lp_valid_q <= lp_valid_nxt_w;
+	end
+always @(posedge clk_i or posedge rst_i)
+	if (rst_i) begin
+		lp_addr_q <= 'b0;
+	end else begin
+		if (write_i)
+			lp_addr_q <= addr_i;
+	end
+// got snpinvalid 
+assign snp_invalid_w =	(ac_opcode_i == `AC_OPCODE_READUNIQUE) |
+						(ac_opcode_i == `AC_OPCODE_CLEANUNIQUE) |
+						(ac_opcode_i == `AC_OPCODE_CLEANINVALID) |
+						(ac_opcode_i == `AC_OPCODE_MAKEINVALID);
+assign snpinvalid_match_w = ac_valid_i & lp_valid_q & snp_invalid_w  & (lp_addr_q[`PA_WIDTH-1:$clog2(`L1D_CACHELINE_SIZE)] == ac_addr_i[`PA_WIDTH-1:$clog2(`L1D_CACHELINE_SIZE)]);
+
+assign write_snpinvalid_match_w = ac_valid_i & write_i & snp_invalid_w & (addr_i[`PA_WIDTH-1:$clog2(`L1D_CACHELINE_SIZE)] == ac_addr_i[`PA_WIDTH-1:$clog2(`L1D_CACHELINE_SIZE)]);
+
+
+
+//****************************************************
+// check lp entry
+//****************************************************
+
+assign detected_o = lp_valid_q & check_i & (lp_addr_q[`PA_WIDTH-1:$clog2(`L1D_CACHELINE_SIZE)] == addr_i[`PA_WIDTH-1:$clog2(`L1D_CACHELINE_SIZE)]);
+
+endmodule
